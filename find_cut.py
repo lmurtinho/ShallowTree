@@ -36,7 +36,7 @@ def get_distances(data, centers):
 # KEEP
 def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
                      distances_pointer, dist_order_pointer,
-                     n, k, dim, ratio, check_imbalance, imbalance_factor,
+                     n, k, dim, ratio,
                      func, float_p, int_p, depth_factor, cuts_row):
     """
     Calls the C function that finds the cut in data (across dimension dim)
@@ -60,20 +60,19 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
     r = np.zeros(1, dtype=np.float64)
     r[0] = ratio
     r_p = r.ctypes.data_as(float_p)
-    imb_fac = ct.c_double(imbalance_factor)
+    imb_fac = ct.c_double(1)
 
     ans = np.zeros(4, dtype=np.float64)
     ans_p = ans.ctypes.data_as(float_p)
     end = time.time()
     func(data_p, data_count_p, centers_p, distances_pointer,
-         dist_order_pointer, n, k, r_p, check_imbalance, imb_fac,
+         dist_order_pointer, n, k, r_p, False, imb_fac,
          ans_p, depth_factor, bool_cut_left, bool_cut_right)
     return ans
 
 # KEEP
 def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
-                ratio, check_imbalance, imbalance_factor, depth_factor,
-                cuts_matrix):
+                ratio, depth_factor, cuts_matrix):
     """
     Finds the best cut across any dimension of data.
     """
@@ -104,7 +103,6 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
             continue
         ans = get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
                                distances_p, dist_order_p, n, k, i, ratio,
-                               check_imbalance, imbalance_factor,
                                LIB2.best_cut_single_dim,
                                C_FLOAT_P, C_INT_P, depth_factor,
                                cuts_matrix[i])
@@ -120,7 +118,7 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
 # KEEP
 def build_tree(data, data_count, centers,
                 distances, valid_centers, valid_data, ratio_type,
-                check_imbalance, imbalance_factor, depth_factor, cuts_matrix):
+                depth_factor, cuts_matrix):
     """
     Builds a tree that induces an explainable partition (from axis-aligned
     cuts) of the data, based on the centers provided by an unrestricted
@@ -134,9 +132,9 @@ def build_tree(data, data_count, centers,
         return node
     ratio = np.inf
 
-    dim, cut, cost, terminal = best_cut(data, data_count, valid_data, centers,
-                              valid_centers, distances, ratio, check_imbalance,
-                              imbalance_factor, depth_factor, cuts_matrix)
+    dim, cut, _, terminal = best_cut(data, data_count, valid_data, centers,
+                              valid_centers, distances, ratio, 
+                              depth_factor, cuts_matrix)
     if terminal:
         node.value = np.argmax(valid_centers)
         return node
@@ -168,28 +166,20 @@ def build_tree(data, data_count, centers,
             else:
                 right_valid_centers[i] = True
 
-    left_centers = left_valid_centers.sum()
-    right_centers = right_valid_centers.sum()
-    left_data = left_valid_data.sum()
-    right_data = right_valid_data.sum()
-
     cuts_matrix[node.feature,0] += 1
     node.left = build_tree(data, data_count, centers,
                             distances, left_valid_centers, left_valid_data,
-                            ratio_type, check_imbalance, imbalance_factor, depth_factor,
-                            cuts_matrix)
+                            ratio_type, depth_factor, cuts_matrix)
     cuts_matrix[node.feature,0] -= 1
     cuts_matrix[node.feature,1] += 1
     node.right = build_tree(data, data_count, centers,
                             distances, right_valid_centers, right_valid_data,
-                            ratio_type, check_imbalance, imbalance_factor, depth_factor,
-                            cuts_matrix)
+                            ratio_type, depth_factor, cuts_matrix)
     cuts_matrix[node.feature,1] -= 1
     return node
 
 # KEEP
-def fit_tree(data, centers, depth_factor, ratio_type=None,
-             check_imbalance=False, imbalance_factor=1):
+def fit_tree(data, centers, depth_factor, ratio_type=None):
     """
     Calculates the distances between all data and all centers from an
     unrestricted partition and finds a tree that induces an explainable
@@ -205,5 +195,4 @@ def fit_tree(data, centers, depth_factor, ratio_type=None,
     cuts_matrix = np.zeros((d,2), dtype=int)
     return build_tree(unique_data, data_count, centers,
                         distances, valid_centers, valid_data, ratio_type,
-                        check_imbalance, imbalance_factor, depth_factor,
-                        cuts_matrix) # CHANGED
+                        depth_factor, cuts_matrix) # CHANGED
