@@ -116,7 +116,7 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
 
 # KEEP
 def build_tree(data, data_count, centers,
-                distances, valid_centers, valid_data, ratio_type,
+                distances, valid_centers, valid_data,
                 depth_factor, cuts_matrix):
     """
     Builds a tree that induces an explainable partition (from axis-aligned
@@ -168,17 +168,17 @@ def build_tree(data, data_count, centers,
     cuts_matrix[node.feature,0] += 1
     node.left = build_tree(data, data_count, centers,
                             distances, left_valid_centers, left_valid_data,
-                            ratio_type, depth_factor, cuts_matrix)
+                            depth_factor, cuts_matrix)
     cuts_matrix[node.feature,0] -= 1
     cuts_matrix[node.feature,1] += 1
     node.right = build_tree(data, data_count, centers,
                             distances, right_valid_centers, right_valid_data,
-                            ratio_type, depth_factor, cuts_matrix)
+                            depth_factor, cuts_matrix)
     cuts_matrix[node.feature,1] -= 1
     return node
 
 # KEEP
-def fit_tree(data, centers, depth_factor, ratio_type=None):
+def fit_tree(data, centers, depth_factor):
     """
     Calculates the distances between all data and all centers from an
     unrestricted partition and finds a tree that induces an explainable
@@ -193,5 +193,5 @@ def fit_tree(data, centers, depth_factor, ratio_type=None):
     # CHANGED
     cuts_matrix = np.zeros((d,2), dtype=int)
     return build_tree(unique_data, data_count, centers,
-                        distances, valid_centers, valid_data, ratio_type,
+                        distances, valid_centers, valid_data,
                         depth_factor, cuts_matrix) # CHANGED
