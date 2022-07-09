@@ -19,8 +19,7 @@ C_INT_P = ct.POINTER(ct.c_int)
 LIB2.best_cut_single_dim.restype = ct.c_void_p
 LIB2.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, C_FLOAT_P,
                                     C_INT_P, ct.c_int, ct.c_int, C_FLOAT_P,
-                                    ct.c_bool, ct.c_double, C_FLOAT_P, ct.c_double,
-                                    ct.c_bool, ct.c_bool]
+                                    C_FLOAT_P, ct.c_double, ct.c_bool, ct.c_bool]
 
 # KEEP
 def get_distances(data, centers):
@@ -66,8 +65,8 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
     ans_p = ans.ctypes.data_as(float_p)
     end = time.time()
     func(data_p, data_count_p, centers_p, distances_pointer,
-         dist_order_pointer, n, k, r_p, False, imb_fac,
-         ans_p, depth_factor, bool_cut_left, bool_cut_right)
+         dist_order_pointer, n, k, r_p, ans_p, depth_factor, 
+         bool_cut_left, bool_cut_right)
     return ans
 
 # KEEP

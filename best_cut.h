@@ -115,8 +115,7 @@ double get_cur_height_cost(int NesqAux, int NdirAux,
 
 void best_cut_single_dim(double *data, int *data_count, double *centers,
                          double *distances, int *dist_order, int n, int k,
-                         double *r_p, bool check_imbalance,
-                         double imbalance_factor, double *ans, double height_factor,
+                         double *r_p, double *ans, double height_factor,
                          bool cut_left, bool cut_right) {
   // printf("n: %d, k = %d\n", n, k);
   // printf("first row: %d\tsecond row: %d\n", cut_left, cut_right);
@@ -142,8 +141,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   double best_cost;
   double best_cost_imbalance;
   double cur_cost_imbalance;
-  double a = (k == 2) ? 0 : (imbalance_factor - 1) / (k - 2);
-  double b = (k == 2) ? 1 : 1 - a;
   double old_data_cost;
   double max_cut;
   int max_center;
@@ -361,10 +358,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       (idx_data >= idx_centers) && ( (n - idx_data) >= (k - idx_centers) ) ) {
        best_cut = nxt_cut;
        best_cost = cur_cost;
-       best_cost_imbalance = check_imbalance ?
-                             get_cost_imbalance(cur_cost, a, b, idx_centers,
-                               k - idx_centers) :
-                             best_cost;
   }
   else {
     best_cut = -1;
@@ -504,12 +497,9 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
 if(valid){
   // check if cut is acceptable: must have at least as many centers
     // as data points on each side
-  cur_cost_imbalance = check_imbalance ? get_cost_imbalance(cur_cost, a, b, idx_centers, k - idx_centers) : cur_cost;
-
-    if (valid  && (cur_cost_imbalance < best_cost_imbalance) ) {
+    if (valid  && (cur_cost < best_cost) ) {
          best_cut = nxt_cut;
          best_cost = cur_cost;
-         best_cost_imbalance = cur_cost_imbalance;
     }
 }
 
