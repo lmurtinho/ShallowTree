@@ -118,7 +118,7 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
     return best_dim, best_cut, best_cost, terminal
 
 # KEEP
-def build_tree(data, data_count, centers, max_height, cur_height,
+def build_tree(data, data_count, centers,
                 distances, valid_centers, valid_data, ratio_type,
                 check_imbalance, imbalance_factor, depth_factor, cuts_matrix,
                 treat_redundances):
@@ -133,27 +133,7 @@ def build_tree(data, data_count, centers, max_height, cur_height,
     if k == 1:
         node.value = np.argmax(valid_centers)
         return node
-    if not max_height:
-        ratio = np.inf
-    else:
-        h = max_height - cur_height
-
-        # OPTION 1: ratio restricts initial cuts
-        if ratio_type=="tight":
-            ratio = 1/(k**(1/h) - 1)
-            min_ratio = np.ceil(k/2) / np.floor(k/2)
-            ratio = max(ratio, min_ratio)
-
-        # OPTION 2: ratio restricts later cuts
-        elif ratio_type == "loose":
-            max_below = min(k-1, 2**(h-1))
-            min_below = k - max_below
-            ratio = max_below / min_below
-
-        # OPTION 3: no ratio restriction
-        else:
-            ratio = np.inf
-
+    ratio = np.inf
 
     dim, cut, cost, terminal = best_cut(data, data_count, valid_data, centers,
                               valid_centers, distances, ratio, check_imbalance,
@@ -196,14 +176,14 @@ def build_tree(data, data_count, centers, max_height, cur_height,
 
     if treat_redundances:
         cuts_matrix[node.feature,0] += 1
-    node.left = build_tree(data, data_count, centers, max_height, cur_height + 1,
+    node.left = build_tree(data, data_count, centers,
                             distances, left_valid_centers, left_valid_data,
                             ratio_type, check_imbalance, imbalance_factor, depth_factor,
                             cuts_matrix, treat_redundances)
     if treat_redundances:
         cuts_matrix[node.feature,0] -= 1
         cuts_matrix[node.feature,1] += 1
-    node.right = build_tree(data, data_count, centers, max_height, cur_height + 1,
+    node.right = build_tree(data, data_count, centers,
                             distances, right_valid_centers, right_valid_data,
                             ratio_type, check_imbalance, imbalance_factor, depth_factor,
                             cuts_matrix, treat_redundances)
@@ -212,7 +192,7 @@ def build_tree(data, data_count, centers, max_height, cur_height,
     return node
 
 # KEEP
-def fit_tree(data, centers, depth_factor, max_height=None, ratio_type=None,
+def fit_tree(data, centers, depth_factor, ratio_type=None,
              check_imbalance=False, imbalance_factor=1, treat_redundances=False):
     """
     Calculates the distances between all data and all centers from an
@@ -227,7 +207,7 @@ def fit_tree(data, centers, depth_factor, max_height=None, ratio_type=None,
     distances = get_distances(unique_data, centers)
     # CHANGED
     cuts_matrix = np.zeros((d,2), dtype=int)
-    return build_tree(unique_data, data_count, centers, max_height, 0,
+    return build_tree(unique_data, data_count, centers,
                         distances, valid_centers, valid_data, ratio_type,
                         check_imbalance, imbalance_factor, depth_factor,
                         cuts_matrix, treat_redundances) # CHANGED
