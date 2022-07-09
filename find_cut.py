@@ -120,8 +120,7 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
 # KEEP
 def build_tree(data, data_count, centers,
                 distances, valid_centers, valid_data, ratio_type,
-                check_imbalance, imbalance_factor, depth_factor, cuts_matrix,
-                treat_redundances):
+                check_imbalance, imbalance_factor, depth_factor, cuts_matrix):
     """
     Builds a tree that induces an explainable partition (from axis-aligned
     cuts) of the data, based on the centers provided by an unrestricted
@@ -174,26 +173,23 @@ def build_tree(data, data_count, centers,
     left_data = left_valid_data.sum()
     right_data = right_valid_data.sum()
 
-    if treat_redundances:
-        cuts_matrix[node.feature,0] += 1
+    cuts_matrix[node.feature,0] += 1
     node.left = build_tree(data, data_count, centers,
                             distances, left_valid_centers, left_valid_data,
                             ratio_type, check_imbalance, imbalance_factor, depth_factor,
-                            cuts_matrix, treat_redundances)
-    if treat_redundances:
-        cuts_matrix[node.feature,0] -= 1
-        cuts_matrix[node.feature,1] += 1
+                            cuts_matrix)
+    cuts_matrix[node.feature,0] -= 1
+    cuts_matrix[node.feature,1] += 1
     node.right = build_tree(data, data_count, centers,
                             distances, right_valid_centers, right_valid_data,
                             ratio_type, check_imbalance, imbalance_factor, depth_factor,
-                            cuts_matrix, treat_redundances)
-    if treat_redundances:
-        cuts_matrix[node.feature,1] -= 1
+                            cuts_matrix)
+    cuts_matrix[node.feature,1] -= 1
     return node
 
 # KEEP
 def fit_tree(data, centers, depth_factor, ratio_type=None,
-             check_imbalance=False, imbalance_factor=1, treat_redundances=False):
+             check_imbalance=False, imbalance_factor=1):
     """
     Calculates the distances between all data and all centers from an
     unrestricted partition and finds a tree that induces an explainable
@@ -210,4 +206,4 @@ def fit_tree(data, centers, depth_factor, ratio_type=None,
     return build_tree(unique_data, data_count, centers,
                         distances, valid_centers, valid_data, ratio_type,
                         check_imbalance, imbalance_factor, depth_factor,
-                        cuts_matrix, treat_redundances) # CHANGED
+                        cuts_matrix) # CHANGED
