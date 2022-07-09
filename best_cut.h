@@ -33,15 +33,6 @@ int *order_data(double *data, int n) {
   return ans;
 }
 
-double get_cost_imbalance(double cost, double a, double b,
-                          int centers_left, int centers_right) {
-  double imbalance = (centers_left > centers_right) ?
-                     (double) centers_left / centers_right :
-                     (double) centers_right / centers_left;
-  double factor = a * imbalance + b;
-  return cost * factor;
-}
-
 //retorna o numerador da altura ponderada. No final tem que dividir por N
 double get_height_cost(int curr_height,int N, int K, double alpha, double beta){
   int Nesq, Ndir,Kesq,Kdir;
