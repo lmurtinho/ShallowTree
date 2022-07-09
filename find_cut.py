@@ -18,7 +18,7 @@ C_INT_P = ct.POINTER(ct.c_int)
 
 LIB2.best_cut_single_dim.restype = ct.c_void_p
 LIB2.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, C_FLOAT_P,
-                                    C_INT_P, ct.c_int, ct.c_int, C_FLOAT_P,
+                                    C_INT_P, ct.c_int, ct.c_int,
                                     C_FLOAT_P, ct.c_double, ct.c_bool, ct.c_bool]
 
 # KEEP
@@ -34,15 +34,13 @@ def get_distances(data, centers):
 
 # KEEP
 def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
-                     distances_pointer, dist_order_pointer,
-                     n, k, dim,
+                     distances_pointer, dist_order_pointer, n, k, dim,
                      func, float_p, int_p, depth_factor, cuts_row):
     """
     Calls the C function that finds the cut in data (across dimension dim)
     with the smallest cost.
     """
 
-    start = time.time()
     data_f = np.asarray(data[valid_data, dim], dtype=np.float64)
     data_p = data_f.ctypes.data_as(float_p)
 
@@ -56,14 +54,10 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
     bool_cut_left = bool(cuts_row[0])
     bool_cut_right = bool(cuts_row[1])
 
-    r = np.zeros(1, dtype=np.float64)
-    r[0] = np.inf
-    r_p = r.ctypes.data_as(float_p)
-
     ans = np.zeros(4, dtype=np.float64)
     ans_p = ans.ctypes.data_as(float_p)
     func(data_p, data_count_p, centers_p, distances_pointer,
-         dist_order_pointer, n, k, r_p, ans_p, depth_factor, 
+         dist_order_pointer, n, k, ans_p, depth_factor, 
          bool_cut_left, bool_cut_right)
     return ans
 

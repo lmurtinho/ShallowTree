@@ -22,17 +22,6 @@ int compare(const void *a, const void *b) {
   return ans;
 }
 
-bool check_ratio(int a, int b, double r) {
-  bool ans = true;
-  if (a > b) {
-    ans = (a <= r*b);
-  }
-  else if (b > a) {
-    ans = (b <= r*a);
-  }
-  return ans;
-}
-
 int *order_data(double *data, int n) {
   int i;
     int *ans = (int *)malloc(sizeof(int) * n);
@@ -90,36 +79,20 @@ double get_cur_height_cost(int NesqAux, int NdirAux,
   double ans = 0;
   double height_cost_left = get_height_cost(1,NesqAux,KesqAux,alpha,beta);
   double height_cost_right = get_height_cost(1,NdirAux,KdirAux,alpha,beta);
-  // if ( cut_right || cut_left ) {
-  //   ans = (height_cost_left + height_cost_right)/n;
-  //   printf("height cost with redundance: %.4f\t", ans);
-  // }
   if (cut_left) {
-    // printf("free cut!\n");
-    // printf("old left cost: %.4f\t", height_cost_left);
     height_cost_left -= (double)NesqAux;
-    // printf("new left cost: %.4f\n", height_cost_left);
   }
   if (cut_right) {
-    // printf("free cut!\n");
-    // printf("old right cost: %.4f\t", height_cost_right);
     height_cost_right -= (double)NdirAux;
-    // printf("new right cost: %.4f\n", height_cost_right);
   }
   ans = (height_cost_left + height_cost_right)/n;
-  // if (cut_left || cut_right) {
-  //     printf("height cost without redundance: %.4f\n", ans);
-  // }
   return ans;
 }
 
 void best_cut_single_dim(double *data, int *data_count, double *centers,
                          double *distances, int *dist_order, int n, int k,
-                         double *r_p, double *ans, double height_factor,
+                         double *ans, double height_factor,
                          bool cut_left, bool cut_right) {
-  // printf("n: %d, k = %d\n", n, k);
-  // printf("first row: %d\tsecond row: %d\n", cut_left, cut_right);
-  double r = r_p[0];
   int i, j, c, cur_c, ix, ic;
   int idx_data = 0;
   int idx_centers = 0;
@@ -153,7 +126,7 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   int *data_order = (int *)malloc(sizeof(int) * n);
   int *centers_order = (int *)malloc(sizeof(int) * k);
   bool valid = false;
-  //printf("oi 1");
+
   // data order array
   for (i = 0; i < n; i++) {
     data_order[i] = i;
@@ -167,41 +140,14 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   }
   array = centers;
   qsort(centers_order, k, sizeof(*centers_order), compare);
-  //printf("oi 2");
-  //sao os indices que ordenam os centros e os dados, nao sao os vetores ordenados
-
-  // next cut is the smallest cut that respects the ratio
-  // max cut is largest value of center that respects the ratio
-  ic = 0;
-  while (!check_ratio(ic, k - ic, r)) {
-    ic++;
-    if (ic == k) {
-      ic = 1;
-      break;
-    }
-  }
-  //printf("oi 3");
-  ic--;
-  c = centers_order[ic];
+  
+  // next cut is the smallest cut
+  // max cut is largest value of center
+  c = centers_order[0];
   nxt_cut = centers[c];
-  ic++;
-  while (check_ratio(ic, k - ic, r)) {
-    ic++;
-    if (ic == k) {
-      break;
-    }
-  }
-  //printf("oi 3");
-
-
-  ic--;
-  max_center = ic;
-  c = centers_order[ic];
+  c = centers_order[k-1];
   max_cut = centers[c];
-  ic++;
-  //printf("oi 3");
-  //nxt_cut da sempre o primeiro centro  e max_cut da sempre o ultimo centro no caso em que r=infinito, posso apagar ja
-  // printf("ic: %d, ", ic);
+
   // current costs are the best costs (no cuts yet)
   for (i = 0; i < n; i++) {
     c = dist_order[i * k];
@@ -209,7 +155,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
     cur_dist_costs[i] = distances[i*k + c] * data_count[i];
     cur_dist_cost += cur_dist_costs[i];
   }
-  //printf("oi 3");
   init_dist_cost = cur_dist_cost;
   // consider a single center is in the left
   c = centers_order[0];
@@ -219,7 +164,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   for (i = 0; i < n; i++) {
     best_in_left[i] = c;
   }
-  // printf("oi 3\n");
 
   // vector to keep track of index of centers that
   // have been tested to the right
