@@ -9,7 +9,6 @@ Created on Tue Feb  9 20:17:38 2021
 import numpy as np
 import ctypes as ct
 from ExKMC.Tree import Node
-import time
 
 LIB2 = ct.CDLL('./lib_best_cut.so')
 C_FLOAT_P = ct.POINTER(ct.c_float)
@@ -50,7 +49,6 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
     centers_f = np.asarray(centers[valid_centers,dim], dtype=np.float64)
     centers_p = centers_f.ctypes.data_as(float_p)
 
-    # print(cuts_row)
     bool_cut_left = bool(cuts_row[0])
     bool_cut_right = bool(cuts_row[1])
 

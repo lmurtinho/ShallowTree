@@ -408,7 +408,7 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
 
     if(KesqAux<=0 || KdirAux<=0){
       cur_height_cost = 100000;
-      printf("caso esquisiito \n");
+      printf("caso esquisito \n");
     }
     else{
       // if (cut_left || cut_right) {
