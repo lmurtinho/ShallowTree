@@ -35,7 +35,7 @@ def get_distances(data, centers):
 # KEEP
 def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
                      distances_pointer, dist_order_pointer,
-                     n, k, dim, ratio,
+                     n, k, dim,
                      func, float_p, int_p, depth_factor, cuts_row):
     """
     Calls the C function that finds the cut in data (across dimension dim)
@@ -57,13 +57,11 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
     bool_cut_right = bool(cuts_row[1])
 
     r = np.zeros(1, dtype=np.float64)
-    r[0] = ratio
+    r[0] = np.inf
     r_p = r.ctypes.data_as(float_p)
-    imb_fac = ct.c_double(1)
 
     ans = np.zeros(4, dtype=np.float64)
     ans_p = ans.ctypes.data_as(float_p)
-    end = time.time()
     func(data_p, data_count_p, centers_p, distances_pointer,
          dist_order_pointer, n, k, r_p, ans_p, depth_factor, 
          bool_cut_left, bool_cut_right)
@@ -71,7 +69,7 @@ def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
 
 # KEEP
 def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
-                ratio, depth_factor, cuts_matrix):
+                depth_factor, cuts_matrix):
     """
     Finds the best cut across any dimension of data.
     """
@@ -101,7 +99,7 @@ def best_cut(data, data_count, valid_data, centers, valid_centers, distances,
         if len(np.unique(data[valid_data,i])) == 1:
             continue
         ans = get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
-                               distances_p, dist_order_p, n, k, i, ratio,
+                               distances_p, dist_order_p, n, k, i,
                                LIB2.best_cut_single_dim,
                                C_FLOAT_P, C_INT_P, depth_factor,
                                cuts_matrix[i])
@@ -129,11 +127,9 @@ def build_tree(data, data_count, centers,
     if k == 1:
         node.value = np.argmax(valid_centers)
         return node
-    ratio = np.inf
 
     dim, cut, _, terminal = best_cut(data, data_count, valid_data, centers,
-                              valid_centers, distances, ratio, 
-                              depth_factor, cuts_matrix)
+                              valid_centers, distances, depth_factor, cuts_matrix)
     if terminal:
         node.value = np.argmax(valid_centers)
         return node
