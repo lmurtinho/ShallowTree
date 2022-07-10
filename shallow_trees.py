@@ -22,3 +22,21 @@ class ShallowTree(Tree):
         self.__fill_stats__(self.tree, x_data, y)
 
         return self
+
+if __name__ == '__main__':
+    import joblib, sys
+    from sklearn.cluster import KMeans
+    data_name = sys.argv[1]
+    seed = int(sys.argv[2]) if len(sys.argv) >= 3 else None
+    folder = '/home/lmurtinho_local/shallow_decision_trees/results/data'
+    data_dict = joblib.load(f'{folder}/{data_name}.joblib')
+    data = data_dict['data']
+    k = data_dict['k']
+    km = KMeans(k, random_state=seed)
+    km.fit(data)
+    st = ShallowTree(k=k)
+    st.fit(data, km)
+    print(st.score(data))
+    t = Tree(k)
+    t.fit(data, km)
+    print(t.score(data))
