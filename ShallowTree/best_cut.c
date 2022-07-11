@@ -1,3 +1,6 @@
+#ifndef LIB
+#define LIB
+
 #ifndef BEST_CUT
 #define BEST_CUT
 
@@ -407,5 +410,10 @@ if(valid){
   free(centers_order);
   return;
 };
+
+#endif
+
+
+int main () {}
 
 #endif
