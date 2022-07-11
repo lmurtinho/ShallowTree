@@ -138,9 +138,6 @@ class ShallowTree(Tree):
                                     dtype=np.int32).reshape(n*k)
         dist_order_p = dist_order_f.ctypes.data_as(C_INT_P)
 
-        c_centers_below = np.zeros(dim)
-        c_data_below = np.zeros(dim)
-
         terminal = False
 
         for i in range(dim):
@@ -151,7 +148,7 @@ class ShallowTree(Tree):
                                         dist_order_p, n, k, i, 
                                         LIB2.best_cut_single_dim, 
                                         depth_factor, cuts_matrix[i])
-            cut, cost, c_centers_below[i], c_data_below[i] = ans
+            cut, cost = ans
             if cost < best_cost:
                 best_cut = cut
                 best_dim = i
@@ -184,7 +181,7 @@ class ShallowTree(Tree):
         bool_cut_left = bool(cuts_row[0])
         bool_cut_right = bool(cuts_row[1])
 
-        ans = np.zeros(4, dtype=np.float64)
+        ans = np.zeros(2, dtype=np.float64)
         ans_p = ans.ctypes.data_as(C_FLOAT_P)
         func(data_p, data_count_p, centers_p, distances_pointer,
             dist_order_pointer, n, k, ans_p, depth_factor, 

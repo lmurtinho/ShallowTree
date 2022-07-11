@@ -203,8 +203,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   if (idx_centers == k) {
     ans[0] = -1;
     ans[1] = INFINITY;
-    ans[2] = -1;
-    ans[3] = -1;
     free(cur_dist_costs);
     free(left_data_mask);
     free(left_centers_mask);
@@ -446,8 +444,6 @@ if(valid){
   if ( (max_center) && (idx_centers > max_center) ) {
     ans[0] = -1;
     ans[1] = INFINITY;
-    ans[2] = -1;
-    ans[3] = -1;
     free(cur_dist_costs);
     free(left_data_mask);
     free(left_centers_mask);
@@ -461,8 +457,6 @@ if(valid){
   // return best cut and cost
   ans[0] = best_cut;
   ans[1] = best_cost;
-  ans[2] = (double) idx_centers;
-  ans[3] = (double) idx_data;
 
   free(cur_dist_costs);
   free(left_data_mask);
