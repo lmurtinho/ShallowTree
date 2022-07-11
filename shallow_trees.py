@@ -1,7 +1,6 @@
 from ExKMC.Tree import Tree, Node
 import numpy as np
 from sklearn.cluster import KMeans
-from find_cut import get_best_cut_dim
 import ctypes as ct
 
 LIB2 = ct.CDLL('./lib_best_cut.so')
@@ -147,10 +146,11 @@ class ShallowTree(Tree):
         for i in range(dim):
             if len(np.unique(data[valid_data,i])) == 1:
                 continue
-            ans = get_best_cut_dim(data, data_count, valid_data, centers, 
-                                   valid_centers, distances_p, dist_order_p, 
-                                   n, k, i, LIB2.best_cut_single_dim,
-                                   depth_factor, cuts_matrix[i])
+            ans = self._get_best_cut_dim(data, data_count, valid_data, 
+                                        centers, valid_centers, distances_p, 
+                                        dist_order_p, n, k, i, 
+                                        LIB2.best_cut_single_dim, 
+                                        depth_factor, cuts_matrix[i])
             cut, cost, c_centers_below[i], c_data_below[i] = ans
             if cost < best_cost:
                 best_cut = cut
@@ -159,6 +159,37 @@ class ShallowTree(Tree):
         if best_cut == -np.inf:
             terminal = True
         return best_dim, best_cut, best_cost, terminal
+    
+    def _get_best_cut_dim(self, data, data_count, valid_data, centers, 
+                            valid_centers, distances_pointer, 
+                            dist_order_pointer, n, k, dim, func, 
+                            depth_factor, cuts_row):
+        """
+        Calls the C function that finds the cut in data (across dimension 
+        dim) with the smallest cost.
+        """
+
+        data_f = np.asarray(data[valid_data, dim], 
+                            dtype=np.float64)
+        data_p = data_f.ctypes.data_as(C_FLOAT_P)
+
+        data_count_f = np.asarray(data_count[valid_data], 
+                                    dtype=np.int32)
+        data_count_p = data_count_f.ctypes.data_as(C_INT_P)
+
+        centers_f = np.asarray(centers[valid_centers,dim], 
+                                dtype=np.float64)
+        centers_p = centers_f.ctypes.data_as(C_FLOAT_P)
+
+        bool_cut_left = bool(cuts_row[0])
+        bool_cut_right = bool(cuts_row[1])
+
+        ans = np.zeros(4, dtype=np.float64)
+        ans_p = ans.ctypes.data_as(C_FLOAT_P)
+        func(data_p, data_count_p, centers_p, distances_pointer,
+            dist_order_pointer, n, k, ans_p, depth_factor, 
+            bool_cut_left, bool_cut_right)
+        return ans
 
 def get_distances(data, centers):
     """
