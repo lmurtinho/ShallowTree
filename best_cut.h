@@ -33,48 +33,50 @@ int *order_data(double *data, int n) {
   return ans;
 }
 
-//retorna o numerador da altura ponderada. No final tem que dividir por N
-double get_height_cost(int curr_height,int N, int K, double alpha, double beta){
-  int Nesq, Ndir,Kesq,Kdir;
+// returns the numerator of the weighted height. At the end, it must 
+// be divided by N
+double get_height_cost(int curr_height,int N, int K, double alpha, 
+                       double beta){
+  int N_l, N_r,K_l,K_r;
   if (K==1){
     return N*curr_height;
   }
 
-  Kesq = (int)ceil(K*beta);
-  Kesq = (Kesq>1)?Kesq:1;
-  Kesq = (Kesq<K)?Kesq:K-1;
-  Kdir = K - Kesq;
+  K_l = (int)ceil(K*beta);
+  K_l = (K_l>1)?K_l:1;
+  K_l = (K_l<K)?K_l:K-1;
+  K_r = K - K_l;
   if(N==1){
-    if(Kesq>Kdir) Nesq=1;
-    else Nesq =0;
+    if(K_l>K_r) N_l=1;
+    else N_l =0;
   }
   else{
-    Nesq = (int)ceil(N*alpha);
-    Nesq = (Nesq>1)? Nesq:1;
-    Nesq = (Nesq<N)? Nesq:N-1;
+    N_l = (int)ceil(N*alpha);
+    N_l = (N_l>1)? N_l:1;
+    N_l = (N_l<N)? N_l:N-1;
   }
 
 
-  Ndir = N - Nesq;
+  N_r = N - N_l;
 
-  //printf("corte com N = %d, K=%d, virando Kesq = %d, Nesq = %d, Kdir = %d, Ndir = %d \n",N,K,Kesq,Nesq,Kdir,Ndir);
-  return get_height_cost(curr_height+1,Nesq,Kesq,alpha,beta)+get_height_cost(curr_height+1,Ndir,Kdir,alpha,beta);
+  return get_height_cost(curr_height+1,N_l,K_l,alpha,beta)+
+         get_height_cost(curr_height+1,N_r,K_r,alpha,beta);
 
 }
 
-double get_cur_height_cost(int NesqAux, int NdirAux,
-                           int KesqAux, int KdirAux,
+double get_cur_height_cost(int N_lAux, int N_rAux,
+                           int K_lAux, int K_rAux,
                            int n,
                            float alpha, float beta,
                            bool cut_left, bool cut_right) {
   double ans = 0;
-  double height_cost_left = get_height_cost(1,NesqAux,KesqAux,alpha,beta);
-  double height_cost_right = get_height_cost(1,NdirAux,KdirAux,alpha,beta);
+  double height_cost_left = get_height_cost(1,N_lAux,K_lAux,alpha,beta);
+  double height_cost_right = get_height_cost(1,N_rAux,K_rAux,alpha,beta);
   if (cut_left) {
-    height_cost_left -= (double)NesqAux;
+    height_cost_left -= (double)N_lAux;
   }
   if (cut_right) {
-    height_cost_right -= (double)NdirAux;
+    height_cost_right -= (double)N_rAux;
   }
   ans = (height_cost_left + height_cost_right)/n;
   return ans;
@@ -87,11 +89,11 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   int i, j, c, cur_c, ix, ic;
   int idx_data = 0;
   int idx_centers = 0;
-  int Nesq=0;
-  int Ndir =0;
-  int Kdir =0;
-  int Kesq =0;
-  int NesqAux,NdirAux,KesqAux,KdirAux;
+  int N_l=0;
+  int N_r =0;
+  int K_r =0;
+  int K_l =0;
+  int N_lAux,N_rAux,K_lAux,K_rAux;
   double nxt_cut;
   double best_cut;
   double alpha;
@@ -100,14 +102,9 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   double init_dist_cost=0;
   double cur_dist_cost =0;
   double cur_height_cost =0;
-  double height_cost_left = 0;
-  double height_cost_right = 0;
   double best_cost;
-  double best_cost_imbalance;
-  double cur_cost_imbalance;
   double old_data_cost;
   double max_cut;
-  int max_center;
   int *left_data_mask = (int *)malloc(sizeof(int) * n);
   int *left_centers_mask = (int *)malloc(sizeof(int) * k);
   int *best_in_left = (int *)malloc(sizeof(int) * n);
@@ -162,7 +159,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
   for (i = 0; i < n; i++) {
     best_in_right[i] = 0;
   }
-  // printf("oi 4\n");
 
   // set indices of data and center as first index in
   // which the element is to the right of the cut
@@ -173,11 +169,7 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       ix = data_order[idx_data];
     }
   }
-  // printf("oi 5\n");
-  // printf("ix %d, ", ix);
-
-  //esse trecho nao faz nada, ja que depois de entrar uma vez, o segundo centro e com certeza maior que o nxt_cut ja que ele eh o primeiro
-
+  
   while ( (centers[c] <= nxt_cut) && (idx_centers < k) ) {
     idx_centers++;
     if (idx_centers < k) {
@@ -194,12 +186,9 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       }
     }
   }
-  //printf("oi 4");
-  //aqui tb da pra tirar ctz, ja que na inicializacao eh so o primeiro centro
-  // printf("oi 6\n");
+  
   // if all centers moved to the left after the
   // first cut, return (no cut is possible)
-  // printf("check\n");
   if (idx_centers == k) {
     ans[0] = -1;
     ans[1] = INFINITY;
@@ -213,23 +202,19 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
     free(centers_order);
     return;
   }
-  // printf("oi 7\n");
-
 
   // define masks
   for (i = 0; i < n; i++) {
     left_data_mask[i] = data[i] <= nxt_cut;
-    if(left_data_mask[i]) Nesq++;
-    else Ndir++;
+    if(left_data_mask[i]) N_l++;
+    else N_r++;
   }
-  //da pra fanhar tempo aqui ja que sei que eh so o centers[center_order[0]] que eh true
+
   for (i = 0; i < k; i++) {
     left_centers_mask[i] = centers[i] <= nxt_cut;
-    if(left_centers_mask[i]) Kesq++;
-    else Kdir++;
+    if(left_centers_mask[i]) K_l++;
+    else K_r++;
   }
-  // printf("Nesq: %d, Ndir: %d, Kesq: %d, Kdir: %d",
-          // Nesq, Ndir, Kesq, Kdir);
 
   // reassign data separated from their centers
   for (i = 0; i < n; i++) {
@@ -251,7 +236,6 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       best_in_right[i] = j;
     }
     // if best center is different than current center, update cost
-    //aqui ja passa na direita e na esquerda
     if (c != cur_c) {
       old_data_cost = cur_dist_costs[i];
       cur_dist_costs[i] = distances[i*k + c] * data_count[i];
@@ -259,46 +243,32 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       cur_centers[i] = c;
     }
   }
-  //aqui tenho o cur_dist_cost. Vou somar isso com a custo da altura
-  NesqAux = (Nesq>1)? Nesq:1;
-  NesqAux = (NesqAux==n)? n-1:NesqAux;
-  NdirAux = n - NesqAux;
-  KesqAux = (Kesq>1)?Kesq:1;
-  KesqAux = (KesqAux==k)?k-1:KesqAux;
-  KdirAux = k - KesqAux;
-  alpha = (double)NesqAux/n;
-  beta = (double) KesqAux/k;
-  //printf("oi 5");
-  // printf("oi 9\n");
 
-  //printf("corte com N = %d, K=%d, virando Kesq = %d, Nesq = %d, Kdir = %d, Ndir = %d \n",n,k,KesqAux,NesqAux,KdirAux,NdirAux);
-  // if (cut_left || cut_right) {
-  //   cur_height_cost = get_cur_height_cost(NesqAux, NdirAux, KesqAux, KdirAux,
-  //                                         n, alpha, beta, false, false);
-  //   cur_cost = cur_dist_cost/init_dist_cost+height_factor*cur_height_cost;
-  //   printf("cost with redundance: %.4f\n", cur_cost);
-  // }
-  cur_height_cost = get_cur_height_cost(NesqAux, NdirAux, KesqAux, KdirAux,
+  N_lAux = (N_l>1)? N_l:1;
+  N_lAux = (N_lAux==n)? n-1:N_lAux;
+  N_rAux = n - N_lAux;
+  K_lAux = (K_l>1)?K_l:1;
+  K_lAux = (K_lAux==k)?k-1:K_lAux;
+  K_rAux = k - K_lAux;
+  alpha = (double)N_lAux/n;
+  beta = (double) K_lAux/k;
+  
+  cur_height_cost = get_cur_height_cost(N_lAux, N_rAux, K_lAux, K_rAux,
                                         n, alpha, beta, cut_left, cut_right);
   cur_cost = cur_dist_cost/init_dist_cost+height_factor*cur_height_cost;
-  // if (cut_left || cut_right) {
-  //     printf("cost without redundance: %.4f\n\n", cur_cost);
-  // }
-  // printf("oi 10\n");
-
+  
   // store initial cut and cost as best ones (if they're possible)
   if ((idx_centers != 0) && (idx_centers != k) &&
-      (idx_data >= idx_centers) && ( (n - idx_data) >= (k - idx_centers) ) ) {
+      (idx_data >= idx_centers) && 
+      ( (n - idx_data) >= (k - idx_centers) ) ) {
        best_cut = nxt_cut;
        best_cost = cur_cost;
   }
   else {
     best_cut = -1;
     best_cost = INFINITY;
-    best_cost_imbalance = INFINITY;
   }
-  // printf("oi 11\n");
-
+  
   while ( (idx_data < n) && (idx_centers < k) ) {
     // find next cut and check if feasible
     ix = data_order[idx_data];
@@ -313,12 +283,13 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       break;
     }
 
-    // move data points to the left and assign them to best center to the left
+    // move data points to the left and assign them to best center 
+    // to the left
     while ( (idx_data < n) && (data[ix] <= nxt_cut) ) {
       old_data_cost = cur_dist_costs[ix];
       left_data_mask[ix] = 1;
-      Nesq++;
-      Ndir--;
+      N_l++;
+      N_r--;
       // find best center to the left via best_in_left vector
       c = best_in_left[ix];
       cur_centers[ix] = c;
@@ -333,8 +304,8 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
     // move centers to the left and reassign data points
     while ( (idx_centers < k) && (centers[ic] <= nxt_cut) ) {
       left_centers_mask[ic] = 1;
-      Kesq++;
-      Kdir--;
+      K_l++;
+      K_r--;
       for (i = 0; i < n; i++) {
         old_data_cost = cur_dist_costs[i];
         // update best_in_left vector
@@ -342,8 +313,8 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
         if (distances[i*k + ic] < distances[i*k + cur_c]) {
           best_in_left[i] = ic;
         }
-        // if datum is to the left, assign it to center that moved to the left
-        // if it's best in left
+        // if datum is to the left, assign it to center that moved 
+        // to the left if it's best in left
         if (left_data_mask[i]) {
           if (best_in_left[i] == ic) {
             cur_centers[i] = ic;
@@ -373,59 +344,44 @@ void best_cut_single_dim(double *data, int *data_count, double *centers,
       }
     }
 
-  NesqAux = (Nesq>1)? Nesq:1;
-  NesqAux = (NesqAux>n)? n-1:NesqAux;
-  NdirAux = n - NesqAux;
-  KesqAux = (Kesq>1)?Kesq:1;
-  KesqAux = (KesqAux>k)?k-1:KesqAux;
-  KdirAux = k - KesqAux;
-  alpha = (double)NesqAux/n;
-  beta = (double) KesqAux/k;
+  N_lAux = (N_l>1)? N_l:1;
+  N_lAux = (N_lAux>n)? n-1:N_lAux;
+  N_rAux = n - N_lAux;
+  K_lAux = (K_l>1)?K_l:1;
+  K_lAux = (K_lAux>k)?k-1:K_lAux;
+  K_rAux = k - K_lAux;
+  alpha = (double)N_lAux/n;
+  beta = (double) K_lAux/k;
 
-  if ((idx_centers != 0) && (idx_centers != k) && (idx_data >= idx_centers) && ( (n - idx_data) >= (k - idx_centers) )  ) {
+  if ((idx_centers != 0) && (idx_centers != k) && (idx_data >= idx_centers) 
+      && ( (n - idx_data) >= (k - idx_centers) )  ) {
     //check if cut is valid: must have at least as many centers
     // as data points on each side
     valid = true;
-    NesqAux = (Nesq>1)? Nesq:1;
-    NesqAux = (NesqAux>n)? n-1:NesqAux;
-    NdirAux = n - NesqAux;
-    KesqAux = (Kesq>1)?Kesq:1;
-    KesqAux = (KesqAux>k)?k-1:KesqAux;
-    KdirAux = k - KesqAux;
-    alpha = (double)NesqAux/n;
-    beta = (double) KesqAux/k;
+    N_lAux = (N_l>1)? N_l:1;
+    N_lAux = (N_lAux>n)? n-1:N_lAux;
+    N_rAux = n - N_lAux;
+    K_lAux = (K_l>1)?K_l:1;
+    K_lAux = (K_lAux>k)?k-1:K_lAux;
+    K_rAux = k - K_lAux;
+    alpha = (double)N_lAux/n;
+    beta = (double) K_lAux/k;
 
-    if(KesqAux<=0 || KdirAux<=0){
+    if(K_lAux<=0 || K_rAux<=0){
       cur_height_cost = 100000;
-      printf("caso esquisito \n");
+      printf("weird case \n");
     }
     else{
-      // if (cut_left || cut_right) {
-      //   cur_height_cost = get_cur_height_cost(NesqAux, NdirAux, KesqAux, KdirAux,
-      //                                         n, alpha, beta, false, false);
-      //   cur_cost = cur_dist_cost/init_dist_cost+height_factor*cur_height_cost;
-      //   printf("cost with redundance: %.4f\n", cur_cost);
-      // }
-      cur_height_cost = get_cur_height_cost(NesqAux, NdirAux, KesqAux, KdirAux,
-                                            n, alpha, beta, cut_left, cut_right);
-      // cur_height_cost = (get_height_cost(1,NesqAux,KesqAux,alpha,beta)+ get_height_cost(1,NdirAux,KdirAux,alpha,beta))/n;
+      cur_height_cost = get_cur_height_cost(N_lAux, N_rAux, K_lAux, K_rAux,
+                                            n, alpha, beta, cut_left, 
+                                            cut_right);
     }
     cur_cost = cur_dist_cost/init_dist_cost+height_factor*cur_height_cost;
-    // if (cut_left || cut_right) {
-    //   printf("cost without redundance: %.4f\n\n", cur_cost);
-    // }
   }
   else{
     valid = false;
 
   }
-
-
-  //printf("corte com N = %d, K=%d, virando Kesq = %d, Nesq = %d, Kdir = %d, Ndir = %d \n",n,k,KesqAux,NesqAux,KdirAux,NdirAux);
-
-
-
-
 
 if(valid){
   // check if cut is acceptable: must have at least as many centers
@@ -435,25 +391,8 @@ if(valid){
          best_cost = cur_cost;
     }
 }
+}
 
-
-  }
-
-  // if idx_centers > max_centers, return that no cut is possible
-  // (chosen cut did not respect the separation ratio)
-  if ( (max_center) && (idx_centers > max_center) ) {
-    ans[0] = -1;
-    ans[1] = INFINITY;
-    free(cur_dist_costs);
-    free(left_data_mask);
-    free(left_centers_mask);
-    free(best_in_left);
-    free(best_in_right);
-    free(cur_centers);
-    free(data_order);
-    free(centers_order);
-    return;
-  }
   // return best cut and cost
   ans[0] = best_cut;
   ans[1] = best_cost;
@@ -466,7 +405,6 @@ if(valid){
   free(cur_centers);
   free(data_order);
   free(centers_order);
-  // printf(" ok\n");
   return;
 };
 
