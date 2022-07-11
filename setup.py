@@ -1,4 +1,5 @@
 from setuptools import setup, Extension
+from ShallowTree import __version__ as version
 
 #  https://stackoverflow.com/questions/4529555/building-a-ctypes-based-c-library-with-distutils
 from distutils.command.build_ext import build_ext as build_ext_orig
@@ -22,7 +23,7 @@ class build_ext(build_ext_orig):
 
 setup(
     name="ShallowTree",
-    version='0.0.2',
+    version=version,
     author="Lucas Murtinho",
     author_email="lucas.murtinho@gmail.com",
     license="MIT",
