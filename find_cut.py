@@ -16,9 +16,10 @@ C_INT_P = ct.POINTER(ct.c_int)
 
 
 LIB2.best_cut_single_dim.restype = ct.c_void_p
-LIB2.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, C_FLOAT_P,
-                                    C_INT_P, ct.c_int, ct.c_int, C_FLOAT_P, 
-                                    ct.c_double, ct.c_bool, ct.c_bool]
+LIB2.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, 
+                                     C_FLOAT_P, C_INT_P, ct.c_int, 
+                                     ct.c_int, C_FLOAT_P, ct.c_double, 
+                                     ct.c_bool, ct.c_bool]
 
 # KEEP
 def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
@@ -109,7 +110,8 @@ def build_tree(data, data_count, centers,
         return node
 
     dim, cut, _, terminal = best_cut(data, data_count, valid_data, centers,
-                              valid_centers, distances, depth_factor, cuts_matrix)
+                                     valid_centers, distances, depth_factor, 
+                                     cuts_matrix)
     if terminal:
         node.value = np.argmax(valid_centers)
         return node
@@ -143,12 +145,12 @@ def build_tree(data, data_count, centers,
 
     cuts_matrix[node.feature,0] += 1
     node.left = build_tree(data, data_count, centers,
-                            distances, left_valid_centers, left_valid_data,
-                            depth_factor, cuts_matrix)
+                            distances, left_valid_centers, 
+                            left_valid_data, depth_factor, cuts_matrix)
     cuts_matrix[node.feature,0] -= 1
     cuts_matrix[node.feature,1] += 1
     node.right = build_tree(data, data_count, centers,
-                            distances, right_valid_centers, right_valid_data,
-                            depth_factor, cuts_matrix)
+                            distances, right_valid_centers, 
+                            right_valid_data, depth_factor, cuts_matrix)
     cuts_matrix[node.feature,1] -= 1
     return node

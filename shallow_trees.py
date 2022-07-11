@@ -1,7 +1,7 @@
-from ExKMC.Tree import Tree
+from ExKMC.Tree import Tree, Node
 import numpy as np
 from sklearn.cluster import KMeans
-from find_cut import build_tree
+from find_cut import best_cut
 
 class ShallowTree(Tree):
 
@@ -35,11 +35,73 @@ class ShallowTree(Tree):
         valid_centers = np.ones(k, dtype=bool)
         valid_data = np.ones(n, dtype=bool)
         distances = get_distances(unique_data, centers)
-        # CHANGED
         cuts_matrix = np.zeros((d,2), dtype=int)
-        return build_tree(unique_data, data_count, centers,
-                            distances, valid_centers, valid_data,
-                            depth_factor, cuts_matrix) # CHANGED
+        return self._build_tree(unique_data, data_count, centers,
+                                distances, valid_centers, valid_data,
+                                depth_factor, cuts_matrix)
+    
+    def _build_tree(self, data, data_count, centers,
+                    distances, valid_centers, valid_data,
+                    depth_factor, cuts_matrix):
+        """
+        Builds a tree that induces an explainable partition (from 
+        axis-aligned cuts) of the data, based on the centers provided 
+        by an unrestricted partition.
+        """
+        node = Node()
+        k = valid_centers.sum()
+        n = valid_data.sum()
+        if k == 1:
+            node.value = np.argmax(valid_centers)
+            return node
+
+        dim, cut, _, terminal = best_cut(data, data_count, valid_data, 
+                                         centers, valid_centers, distances, 
+                                         depth_factor, cuts_matrix)
+        if terminal:
+            node.value = np.argmax(valid_centers)
+            return node
+
+        node.feature = dim
+        node.value = cut
+
+        n = data.shape[0]
+        data_below = 0
+        left_valid_data = np.zeros(n, dtype=bool)
+        right_valid_data = np.zeros(n, dtype=bool)
+        for i in range(n):
+            if valid_data[i]:
+                if data[i,dim] <= cut:
+                    left_valid_data[i] = True
+                    data_below += 1
+                else:
+                    right_valid_data[i] = True
+
+        k = centers.shape[0]
+        centers_below = 0
+        left_valid_centers = np.zeros(k, dtype=bool)
+        right_valid_centers = np.zeros(k, dtype=bool)
+        for i in range(k):
+            if valid_centers[i]:
+                if centers[i, dim] <= cut:
+                    left_valid_centers[i] = True
+                    centers_below += 1
+                else:
+                    right_valid_centers[i] = True
+
+        cuts_matrix[node.feature,0] += 1
+        node.left = self._build_tree(data, data_count, centers,
+                                     distances, left_valid_centers, 
+                                     left_valid_data, depth_factor, 
+                                     cuts_matrix)
+        cuts_matrix[node.feature,0] -= 1
+        cuts_matrix[node.feature,1] += 1
+        node.right = self._build_tree(data, data_count, centers,
+                                      distances, right_valid_centers, 
+                                      right_valid_data, depth_factor, 
+                                      cuts_matrix)
+        cuts_matrix[node.feature,1] -= 1
+        return node
 
 def get_distances(data, centers):
     """
