@@ -127,26 +127,14 @@ class ShallowTree(Tree):
         n = valid_data.sum()
         k = valid_centers.sum()
 
-        full_dist_mask = np.outer(valid_data, valid_centers)
-        distances_f = np.asarray(distances[full_dist_mask], 
-                                    dtype=np.float64)
-        distances_p = distances_f.ctypes.data_as(C_FLOAT_P)
-
-        dist_shape = distances_f.reshape(n, k)
-        dist_order = np.argsort(dist_shape, axis=1)
-        dist_order_f = np.asarray(dist_order, 
-                                    dtype=np.int32).reshape(n*k)
-        dist_order_p = dist_order_f.ctypes.data_as(C_INT_P)
-
         terminal = False
 
         for i in range(dim):
             if len(np.unique(data[valid_data,i])) == 1:
                 continue
             ans = self._get_best_cut_dim(data, data_count, valid_data, 
-                                        centers, valid_centers, distances_p, 
-                                        dist_order_p, n, k, i, 
-                                        LIB2.best_cut_single_dim, 
+                                        centers, valid_centers, distances, 
+                                        n, k, i, LIB2.best_cut_single_dim, 
                                         depth_factor, cuts_matrix[i])
             cut, cost = ans
             if cost < best_cost:
@@ -158,13 +146,23 @@ class ShallowTree(Tree):
         return best_dim, best_cut, best_cost, terminal
     
     def _get_best_cut_dim(self, data, data_count, valid_data, centers, 
-                            valid_centers, distances_pointer, 
-                            dist_order_pointer, n, k, dim, func, 
+                            valid_centers, distances, n, k, dim, func, 
                             depth_factor, cuts_row):
         """
         Calls the C function that finds the cut in data (across dimension 
         dim) with the smallest cost.
         """
+
+        full_dist_mask = np.outer(valid_data, valid_centers)
+        distances_f = np.asarray(distances[full_dist_mask], 
+                                    dtype=np.float64)
+        distances_pointer = distances_f.ctypes.data_as(C_FLOAT_P)
+
+        dist_shape = distances_f.reshape(n, k)
+        dist_order = np.argsort(dist_shape, axis=1)
+        dist_order_f = np.asarray(dist_order, 
+                                    dtype=np.int32).reshape(n*k)
+        dist_order_pointer = dist_order_f.ctypes.data_as(C_INT_P)
 
         data_f = np.asarray(data[valid_data, dim], 
                             dtype=np.float64)
