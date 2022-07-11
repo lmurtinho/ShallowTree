@@ -1,12 +1,11 @@
 from ExKMC.Tree import Tree
 import numpy as np
-import ctypes as ct
 from sklearn.cluster import KMeans
-from find_cut import fit_tree
+from find_cut import build_tree
 
 class ShallowTree(Tree):
 
-    def fit(self, x_data, kmeans=None, depth_factor=0.03, treat_redundances=True):
+    def fit(self, x_data, kmeans=None, depth_factor=0.03):
         if kmeans is None:
             if self.verbose > 0:
                 print('Finding %d-means' % self.k)
@@ -17,11 +16,40 @@ class ShallowTree(Tree):
         y = np.array(kmeans.predict(x_data), dtype=np.int32)
 
         centers = np.array(kmeans.cluster_centers_, dtype=np.float64)
-        self.tree = fit_tree(x_data, centers, depth_factor)
+        self.tree = self._fit_tree(x_data, centers, depth_factor)
         self._feature_importance = np.zeros(x_data.shape[1])
         self.__fill_stats__(self.tree, x_data, y)
 
         return self
+    
+    def _fit_tree(self, data, centers, depth_factor):
+        """
+        Calculates the distances between all data and all centers from an
+        unrestricted partition and finds a tree that induces an explainable
+        partition based on the unrestricted one.
+        """
+        k, d = centers.shape
+        unique_data, data_count = np.unique(data, axis=0, 
+                                            return_counts=True)
+        n = unique_data.shape[0]
+        valid_centers = np.ones(k, dtype=bool)
+        valid_data = np.ones(n, dtype=bool)
+        distances = get_distances(unique_data, centers)
+        # CHANGED
+        cuts_matrix = np.zeros((d,2), dtype=int)
+        return build_tree(unique_data, data_count, centers,
+                            distances, valid_centers, valid_data,
+                            depth_factor, cuts_matrix) # CHANGED
+
+def get_distances(data, centers):
+    """
+    Finds the squared Euclidean distances between each data point in 
+    data and each center in centers.
+    """
+    distances = np.zeros((data.shape[0], centers.shape[0]))
+    for i in range(centers.shape[0]):
+        distances[:,i] = np.linalg.norm(data - centers[i], axis=1) ** 2
+    return distances
 
 if __name__ == '__main__':
     import joblib, sys

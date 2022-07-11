@@ -21,17 +21,6 @@ LIB2.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, C_FLOAT_P,
                                     ct.c_double, ct.c_bool, ct.c_bool]
 
 # KEEP
-def get_distances(data, centers):
-    """
-    Finds the squared Euclidean distances between each data point in data and
-    each center in centers.
-    """
-    distances = np.zeros((data.shape[0], centers.shape[0]))
-    for i in range(centers.shape[0]):
-        distances[:,i] = np.linalg.norm(data - centers[i], axis=1) ** 2
-    return distances
-
-# KEEP
 def get_best_cut_dim(data, data_count, valid_data, centers, valid_centers,
                      distances_pointer, dist_order_pointer, n, k, dim,
                      func, depth_factor, cuts_row):
@@ -163,22 +152,3 @@ def build_tree(data, data_count, centers,
                             depth_factor, cuts_matrix)
     cuts_matrix[node.feature,1] -= 1
     return node
-
-# KEEP
-def fit_tree(data, centers, depth_factor):
-    """
-    Calculates the distances between all data and all centers from an
-    unrestricted partition and finds a tree that induces an explainable
-    partition based on the unrestricted one.
-    """
-    k, d = centers.shape
-    unique_data, data_count = np.unique(data, axis=0, return_counts=True)
-    n = unique_data.shape[0]
-    valid_centers = np.ones(k, dtype=bool)
-    valid_data = np.ones(n, dtype=bool)
-    distances = get_distances(unique_data, centers)
-    # CHANGED
-    cuts_matrix = np.zeros((d,2), dtype=int)
-    return build_tree(unique_data, data_count, centers,
-                        distances, valid_centers, valid_data,
-                        depth_factor, cuts_matrix) # CHANGED
