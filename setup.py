@@ -1,6 +1,9 @@
 from setuptools import setup, Extension
 from ShallowTree import __version__ as version
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
+
 #  https://stackoverflow.com/questions/4529555/building-a-ctypes-based-c-library-with-distutils
 from distutils.command.build_ext import build_ext as build_ext_orig
 class CTypesExtension(Extension): pass
@@ -28,6 +31,8 @@ setup(
     author_email="lucas.murtinho@gmail.com",
     license="MIT",
     description="Shallow decision trees for explainable clustering",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/lmurtinho/ShallowTree",
     py_modules=['ShallowTree.ShallowTree'],
     ext_modules=[CTypesExtension('ShallowTree/lib_best_cut', 
