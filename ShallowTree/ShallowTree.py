@@ -33,6 +33,7 @@ class ShallowTree(Tree):
         self.tree = self._fit_tree(x_data, centers, depth_factor)
         self._feature_importance = np.zeros(x_data.shape[1])
         self.__fill_stats__(self.tree, x_data, y)
+        self.base_tree = 'Shallow' if depth_factor else 'ExGreedy'
 
         return self
     
