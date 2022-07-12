@@ -1,6 +1,6 @@
 # ShallowTree
 
-Implementation of the ExShallow algoritm from of [Shallow decision trees for explainable k-means clustering](https://arxiv.org/abs/2112.14718), the goal of which is to find a decision tree inducing a partition of the data that is both good (in terms of the k-means cost) and explainable (in terms of being defined by a shallow tree).
+Implementation of the ExShallow algoritm from [Shallow decision trees for explainable k-means clustering](https://arxiv.org/abs/2112.14718), the goal of which is to find a decision tree inducing a partition of the data that is both good (in terms of the k-means cost) and explainable (in terms of being defined by a shallow tree).
 
 ## Installation
 
