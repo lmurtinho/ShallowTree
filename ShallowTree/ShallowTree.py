@@ -18,7 +18,7 @@ LIB.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P,
 
 class ShallowTree(Tree):
 
-    def __init__(self, k, depth_factor=0, random_state=None):
+    def __init__(self, k, depth_factor=0.03, random_state=None):
         super().__init__(k, random_state=random_state)
         self.depth_factor = depth_factor
         self.base_tree = 'Shallow' if depth_factor else 'ExGreedy'
