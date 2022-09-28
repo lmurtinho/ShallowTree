@@ -10,7 +10,6 @@ LIB = ct.CDLL(libfile)
 C_FLOAT_P = ct.POINTER(ct.c_float)
 C_INT_P = ct.POINTER(ct.c_int)
 
-
 LIB.best_cut_single_dim.restype = ct.c_void_p
 LIB.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P, 
                                      C_FLOAT_P, C_INT_P, ct.c_int, 
@@ -19,12 +18,6 @@ LIB.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P,
 
 class ShallowTree(Tree):
 
-<<<<<<< HEAD
-    def fit(self, x_data, centers=None, depth_factor=0.03):
-        kmeans = KMeans(self.k, verbose=self.verbose, 
-            random_state=self.random_state, 
-            n_init=1, max_iter=40)
-=======
     def __init__(self, k, depth_factor=0, random_state=None):
         super().__init__(k, random_state=random_state)
         self.depth_factor = depth_factor
@@ -33,7 +26,6 @@ class ShallowTree(Tree):
     def fit(self, x_data, centers=None):
         kmeans = KMeans(self.k, verbose=self.verbose, 
                         random_state=self.random_state)
->>>>>>> pure_numpy
         if centers is None:
             if self.verbose > 0:
                 print('Finding %d-means' % self.k)
