@@ -2,6 +2,11 @@ from ExKMC.Tree import Tree, Node
 import numpy as np
 
 class BisectionTree(Tree):
+    """
+    Explainable k-means clustering without the need of a previous partition of the data.
+    :param k: Number of clusters.
+    """
+
     def __init__(self, k):
         super().__init__(k)
         self.base_tree = 'Bisection'

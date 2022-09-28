@@ -17,6 +17,12 @@ LIB.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P,
                                      ct.c_bool, ct.c_bool]
 
 class ShallowTree(Tree):
+    """
+    Shallow tree constructor for explainable k-means clustering.
+    :param k: Number of clusters.
+    :param depth_factor: Weight of penalty term to disincentivize deep trees.
+    :param random_state: Random seed generator for kmeans.
+    """
 
     def __init__(self, k, depth_factor=0.03, random_state=None):
         super().__init__(k, random_state=random_state)
