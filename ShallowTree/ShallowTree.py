@@ -19,10 +19,21 @@ LIB.best_cut_single_dim.argtypes = [C_FLOAT_P, C_INT_P, C_FLOAT_P,
 
 class ShallowTree(Tree):
 
+<<<<<<< HEAD
     def fit(self, x_data, centers=None, depth_factor=0.03):
         kmeans = KMeans(self.k, verbose=self.verbose, 
             random_state=self.random_state, 
             n_init=1, max_iter=40)
+=======
+    def __init__(self, k, depth_factor=0, random_state=None):
+        super().__init__(k, random_state=random_state)
+        self.depth_factor = depth_factor
+        self.base_tree = 'Shallow' if depth_factor else 'ExGreedy'
+
+    def fit(self, x_data, centers=None):
+        kmeans = KMeans(self.k, verbose=self.verbose, 
+                        random_state=self.random_state)
+>>>>>>> pure_numpy
         if centers is None:
             if self.verbose > 0:
                 print('Finding %d-means' % self.k)
@@ -32,10 +43,9 @@ class ShallowTree(Tree):
         
         y = np.array(kmeans.predict(x_data), dtype=np.int32)
         centers = np.array(kmeans.cluster_centers_, dtype=np.float64)
-        self.tree = self._fit_tree(x_data, centers, depth_factor)
+        self.tree = self._fit_tree(x_data, centers, self.depth_factor)
         self._feature_importance = np.zeros(x_data.shape[1])
         self.__fill_stats__(self.tree, x_data, y)
-        self.base_tree = 'Shallow' if depth_factor else 'ExGreedy'
 
         return self
     
