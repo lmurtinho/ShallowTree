@@ -33,7 +33,7 @@ tree.fit(data, km)
 # kmeans will run internally
 tree.fit(data)
 
-# return the score of the ttree fit and compare
+# return the score of the tree fit and compare
 # it to the score of the k-means partition
 tree_score = tree.score(data)
 km_score = -km.score(data)
