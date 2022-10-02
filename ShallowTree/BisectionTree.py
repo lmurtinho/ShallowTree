@@ -15,6 +15,7 @@ class BisectionTree(Tree):
     def fit(self, data):
         cuts = self.get_cuts(data)
         self.tree = self.fill_tree(cuts)
+        return self
     
     def get_best_cut(self, data):
         order = np.argsort(data, 0)
