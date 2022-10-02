@@ -13,7 +13,7 @@ class RandomThresholdTree(Tree):
     :param random_state: Random seed generator for kmeans.
     """
 
-    def __init__(self, k, random_state=None):
+    def __init__(self, k, random_state=0):
         super().__init__(k, random_state=random_state)
         self.base_tree = 'RandomThreshold'
         self.rdm = np.random.default_rng(seed=int(self.random_state))
